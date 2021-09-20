@@ -5,11 +5,11 @@ import (
 )
 
 func onPlayButton(event *core.ButtonClickEvent, soundName string) {
-	for _, sound := range Sounds {
+	for _, sound := range sounds[*event.GuildID] {
 		if sound.Name == soundName {
-			guildID := *event.Interaction.GuildID
+			guildID := *event.GuildID
 			if event.Bot().Caches.VoiceStateCache().Get(guildID, event.Bot().ApplicationID) == nil {
-				voiceState := event.Bot().Caches.VoiceStateCache().Get(guildID, event.Interaction.Member.User.ID)
+				voiceState := event.Bot().Caches.VoiceStateCache().Get(guildID, event.User.ID)
 				if voiceState == nil {
 					_ = event.Create(core.NewMessageCreateBuilder().SetEphemeral(true).SetContent("please connect to a voice channel").Build())
 					return
