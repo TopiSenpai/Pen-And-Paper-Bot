@@ -5,44 +5,40 @@ import (
 	"github.com/DisgoOrg/disgo/discord"
 	"github.com/DisgoOrg/disgo/gateway"
 	"github.com/DisgoOrg/disgolink"
-	"github.com/DisgoOrg/disgolink/api"
-	"github.com/sirupsen/logrus"
+	"github.com/DisgoOrg/log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
-var sounds = map[discord.Snowflake][]Sound{
-	testGuildID: {
-		{
-			Name:    "Wooosh",
-			Track64: "QAAAfgIAFFdob29zaCBTb3VuZCBFZmZlY3RzABAyTWlycm9yc0RpYWxvZ3VlAAAAAAAAv2gAC0hEUlZ6d05rVjIwAAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9SERSVnp3TmtWMjAAB3lvdXR1YmUAAAAAAAAAAA==",
-		},
+var sounds = map[discord.Snowflake]map[string]string{
+	me: {
+		"Wooosh": "QAAAfgIAFFdob29zaCBTb3VuZCBFZmZlY3RzABAyTWlycm9yc0RpYWxvZ3VlAAAAAAAAv2gAC0hEUlZ6d05rVjIwAAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9SERSVnp3TmtWMjAAB3lvdXR1YmUAAAAAAAAAAA==",
 	},
 }
 
 var (
 	token       = os.Getenv("token")
 	testGuildID = discord.Snowflake(os.Getenv("test_guild_id"))
-	logger      = logrus.New()
+	me          = discord.Snowflake("170939974227591168")
 	httpClient  = http.DefaultClient
 	bot         *core.Bot
-	dgolink     api.Disgolink
+	dgolink     disgolink.Disgolink
 )
 
 func main() {
-	logger.SetLevel(logrus.DebugLevel)
+	log.SetLevel(log.LevelDebug)
 	var err error
 
-	logger.Infof("starting bot...")
+	log.Infof("starting bot...")
 
 	bot, err = core.NewBot(token,
 		core.WithHTTPClient(httpClient),
-		core.WithLogger(logger),
-		core.WithGatewayConfigOpts(gateway.WithGatewayIntents()),
+		core.WithGatewayConfig(gateway.Config{
+			GatewayIntents:   discord.GatewayIntentsNonPrivileged | discord.GatewayIntentGuildMembers,
+		}),
 		core.WithCacheConfigOpts(
-			core.WithCacheFlags(core.CacheFlagsDefault|core.CacheFlagVoiceStates),
 			core.WithMemberCachePolicy(core.MemberCachePolicyNone),
 			core.WithMessageCachePolicy(core.MessageCachePolicyNone),
 		),
@@ -52,7 +48,7 @@ func main() {
 		}),
 	)
 	if err != nil {
-		logger.Fatalf("error while building disgo instance: %s", err)
+		log.Fatalf("error while building disgo instance: %s", err)
 	}
 
 	defer bot.Close()
@@ -67,7 +63,7 @@ func main() {
 	registerNodes()
 
 	if err = bot.Connect(); err != nil {
-		logger.Fatalf("error while connecting to discord: %s", err)
+		log.Fatalf("error while connecting to discord: %s", err)
 	}
 
 	s := make(chan os.Signal, 1)
@@ -76,7 +72,7 @@ func main() {
 }
 
 func registerNodes() {
-	dgolink.AddNode(&api.NodeOptions{
+	dgolink.AddNode(&disgolink.NodeOptions{
 		Name:     "kittybot",
 		Host:     "lavalink.kittybot.de",
 		Port:     "443",
@@ -86,6 +82,12 @@ func registerNodes() {
 }
 
 var commands = []discord.ApplicationCommandCreate{
+	{
+		Type:              discord.ApplicationCommandTypeSlash,
+		Name:              "soundboard",
+		Description:       "shows your soundboard",
+		DefaultPermission: true,
+	},
 	{
 		Type:        discord.ApplicationCommandTypeSlash,
 		Name:        "sounds",

@@ -2,8 +2,11 @@ package main
 
 import (
 	"github.com/DisgoOrg/disgo/core"
-	"github.com/DisgoOrg/disgolink/api"
+	"github.com/DisgoOrg/disgolink"
+	"regexp"
 )
+
+var URLPattern = regexp.MustCompile("^https?://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]?")
 
 func onSoundAddCommand(event *core.SlashCommandEvent) {
 	err := event.DeferCreate(true)
@@ -15,47 +18,64 @@ func onSoundAddCommand(event *core.SlashCommandEvent) {
 	source := event.Options["source"].String()
 	query := source
 
-	// TODO: ytsearch: if no link or so
+	if !URLPattern.MatchString(query) {
+		query = disgolink.SearchTypeYoutube.Apply(query)
+	}
 
-	dgolink.RestClient().LoadItemHandler(query, api.NewResultHandler(
-		func(track api.Track) {
+	dgolink.RestClient().LoadItemHandler(query, disgolink.NewResultHandler(
+		func(track disgolink.Track) {
 			addNewSound(event, name, track)
 		},
-		func(playlist *api.Playlist) {
+		func(playlist *disgolink.Playlist) {
 			track := playlist.SelectedTrack()
 			if track == nil {
 				track = playlist.Tracks[0]
 			}
 			addNewSound(event, name, track)
 		},
-		func(tracks []api.Track) {
+		func(tracks []disgolink.Track) {
 			addNewSound(event, name, tracks[0])
 		},
 		func() {
 			_, _ = event.UpdateOriginal(core.NewMessageUpdateBuilder().SetContentf("no track for `%s` found", source).Build())
 		},
-		func(e *api.Exception) {
+		func(e *disgolink.Exception) {
 			_, _ = event.UpdateOriginal(core.NewMessageUpdateBuilder().SetContentf("error while getting track for `%s`", source).Build())
 		}),
 	)
 }
 
-func addNewSound(event *core.SlashCommandEvent, name string, track api.Track) {
-	if _, ok := sounds[*event.GuildID]; !ok {
-		sounds[*event.GuildID] = []Sound{}
-	}
-
-	sounds[*event.GuildID] = append(sounds[*event.GuildID], Sound{
-		Name:    name,
-		Track64: track.Track(),
-	})
-	_, _ = event.UpdateOriginal(core.NewMessageUpdateBuilder().SetContentf("added new sound `%s` with [source](%s)", name, track.Info().URI()).Build())
-}
-
 func onSoundRemoveCommand(event *core.SlashCommandEvent) {
-	soundName := event.Options["name"].String()
+	//soundName := event.Options["name"].String()
 }
 
 func onSoundListCommand(event *core.SlashCommandEvent) {
 
+}
+
+func onSoundBoardCommand(event *core.SlashCommandEvent) {
+	userSounds, ok := sounds[event.User.ID]
+	if !ok || len(userSounds) == 0 {
+		_ = event.Create(core.NewMessageCreateBuilder().SetContent("you have no sounds added to your soundboard").SetEphemeral(true).Build())
+		return
+	}
+
+	builder := core.NewMessageCreateBuilder().SetContent("hit a button to play your sounds!").SetEphemeral(true)
+	actionRow := core.NewActionRow()
+	for name, _ := range userSounds {
+		if len(actionRow.Components) == 5 {
+			builder.AddActionRows(actionRow)
+			actionRow = core.NewActionRow()
+			if len(builder.Components) == 4 {
+				break
+			}
+		}
+		actionRow = actionRow.AddComponents(core.NewPrimaryButton(name, "play:"+name, nil))
+	}
+	if len(actionRow.Components) > 0 {
+		builder.AddActionRows(actionRow)
+	}
+
+	builder.AddActionRow(core.NewSecondaryButton("pause", "pause", nil), core.NewDangerButton("stop", "stop", nil))
+	event.Create(builder.Build())
 }

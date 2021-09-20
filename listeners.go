@@ -16,6 +16,8 @@ func onSlashCommand(event *core.SlashCommandEvent) {
 		case "list":
 			go onSoundListCommand(event)
 		}
+	case "soundboard":
+		go onSoundBoardCommand(event)
 	}
 }
 
@@ -26,5 +28,7 @@ func onButtonClick(event *core.ButtonClickEvent) {
 		onPlayButton(event, action[1])
 	case "stop":
 		onStopButton(event)
+	case "pause":
+		onPauseButton(event)
 	}
 }
