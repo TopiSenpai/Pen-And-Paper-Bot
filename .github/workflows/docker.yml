@@ -9,7 +9,7 @@ on:
     pull_request:
 
 env:
-    IMAGE_NAME: sound-board-bot
+    IMAGE_NAME: soundboard-bot
 
 jobs:
     push:
