@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/DisgoOrg/log"
 	"os"
-	"syscall"
 )
 
 const dbFile = "sounds.json"
@@ -12,7 +11,7 @@ const dbFile = "sounds.json"
 func loadSounds() {
 	file, err := os.Open(dbFile)
 	if err != nil {
-		if err == syscall.ERROR_FILE_NOT_FOUND {
+		if os.IsNotExist(err) {
 			return
 		}
 		log.Errorf("failed to open %s. err: %s", dbFile, err)
@@ -28,7 +27,7 @@ func loadSounds() {
 func saveSounds() {
 	file, err := os.OpenFile(dbFile, os.O_CREATE, os.ModePerm)
 	if err != nil {
-		if err == syscall.ERROR_FILE_NOT_FOUND {
+		if os.IsNotExist(err) {
 			file, err = os.Create(dbFile)
 			if err != nil {
 				log.Errorf("failed to create %s. err: ", dbFile, err)
