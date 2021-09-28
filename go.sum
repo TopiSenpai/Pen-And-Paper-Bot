@@ -1,16 +1,6 @@
-github.com/DisgoOrg/disgo v0.5.12-0.20210920174831-3033f7f639dd/go.mod h1:no2sZaFMgy+EohEuTeQA+08Rvfu+VsiY5wsC7FMIcmE=
-github.com/DisgoOrg/disgo v0.5.12-0.20210920233906-b0ab91680676 h1:0/fzGFW4fZ1Wymj4Ht0DKZAlhpZd+HfGihTQn6clYAA=
-github.com/DisgoOrg/disgo v0.5.12-0.20210920233906-b0ab91680676/go.mod h1:no2sZaFMgy+EohEuTeQA+08Rvfu+VsiY5wsC7FMIcmE=
-github.com/DisgoOrg/disgo v0.5.12-0.20210927124441-725ca114b67b h1:ty01INaBBWtoLJDDua9G3y9wEn7kH5jIJeBZSFQm260=
-github.com/DisgoOrg/disgo v0.5.12-0.20210927124441-725ca114b67b/go.mod h1:fUybH2+qCyaMbv2Zmwlm8OVU9o6ooT3mzgYLZ6R3meM=
-github.com/DisgoOrg/disgo v0.5.12-0.20210927192631-2422064bedaa h1:dlPTjd+tLbsmD/rl0c4wvNYCTh2A45ZprG/oRM3xCQ8=
 github.com/DisgoOrg/disgo v0.5.12-0.20210927192631-2422064bedaa/go.mod h1:fUybH2+qCyaMbv2Zmwlm8OVU9o6ooT3mzgYLZ6R3meM=
-github.com/DisgoOrg/disgo v0.5.12-0.20210927203353-47b1ec5f3a75 h1:c1IU4bVRuUVqBr6gx3C0bZthGVOkc4IsKJE0fMi5/6g=
-github.com/DisgoOrg/disgo v0.5.12-0.20210927203353-47b1ec5f3a75/go.mod h1:fUybH2+qCyaMbv2Zmwlm8OVU9o6ooT3mzgYLZ6R3meM=
 github.com/DisgoOrg/disgo v0.5.12-0.20210927235146-fb4bb75295bc h1:+fxaZZRmwgFRJu+SG2mkhEMXc/pcBBsSL8JmkjYdCIo=
 github.com/DisgoOrg/disgo v0.5.12-0.20210927235146-fb4bb75295bc/go.mod h1:fUybH2+qCyaMbv2Zmwlm8OVU9o6ooT3mzgYLZ6R3meM=
-github.com/DisgoOrg/disgolink v0.2.5-0.20210920180628-a58017fd7542 h1:RxSXI9Utx7i0RFQJR3JJ1n6gxltB46eZGa9NMrBF6R0=
-github.com/DisgoOrg/disgolink v0.2.5-0.20210920180628-a58017fd7542/go.mod h1:lbFd0gyWmneUGED7FOfJKQzbcvmR52vDaAdQeDo3zfU=
 github.com/DisgoOrg/disgolink v0.2.5-0.20210927192907-453b0577428b h1:T5GTcoi+21BUuNh+ZJLeWU77L2z/dxJ2O0SM1LlLZPY=
 github.com/DisgoOrg/disgolink v0.2.5-0.20210927192907-453b0577428b/go.mod h1:XydInWmRrY0UKbMI94HFDYM5E1EuLjvdWoiB912nte0=
 github.com/DisgoOrg/log v1.1.2 h1:tGJS4jaH1PyjPRHybHp8WpYJ/4fR3fYWT4Mv1PoDGBM=
@@ -30,6 +20,7 @@ github.com/sasha-s/go-csync v0.0.0-20210812194225-61421b77c44b/go.mod h1:/pA7k3z
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=
