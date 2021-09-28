@@ -13,8 +13,6 @@ func onSlashCommand(event *core.SlashCommandEvent) {
 			go onSoundAddCommand(event)
 		case "remove":
 			go onSoundRemoveCommand(event)
-		case "list":
-			go onSoundListCommand(event)
 		}
 	case "soundboard":
 		go onSoundBoardCommand(event)
@@ -30,5 +28,7 @@ func onButtonClick(event *core.ButtonClickEvent) {
 		onStopButton(event)
 	case "pause":
 		onPauseButton(event)
+	case "page":
+		onPageButton(event, action[1])
 	}
 }

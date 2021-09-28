@@ -9,22 +9,20 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 )
 
-var sounds = map[discord.Snowflake]map[string]string{
-	me: {
-		"Wooosh": "QAAAfgIAFFdob29zaCBTb3VuZCBFZmZlY3RzABAyTWlycm9yc0RpYWxvZ3VlAAAAAAAAv2gAC0hEUlZ6d05rVjIwAAEAK2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tL3dhdGNoP3Y9SERSVnp3TmtWMjAAB3lvdXR1YmUAAAAAAAAAAA==",
-	},
-}
-
 var (
-	token       = os.Getenv("token")
-	testGuildID = discord.Snowflake(os.Getenv("test_guild_id"))
-	me          = discord.Snowflake("170939974227591168")
-	httpClient  = http.DefaultClient
-	bot         *core.Bot
-	dgolink     disgolink.Disgolink
+	token             = os.Getenv("token")
+	lavalinkHost      = os.Getenv("lavalink_host")
+	lavalinkPort      = os.Getenv("lavalink_port")
+	lavalinkPassword  = os.Getenv("lavalink_password")
+	lavalinkSecure, _ = strconv.ParseBool(os.Getenv("lavalink_secure"))
+	testGuildID       = discord.Snowflake(os.Getenv("test_guild_id"))
+	httpClient        = http.DefaultClient
+	bot               *core.Bot
+	dgolink           disgolink.Disgolink
 )
 
 func main() {
@@ -33,15 +31,12 @@ func main() {
 
 	log.Infof("starting bot...")
 
+	loadSounds()
+
 	bot, err = core.NewBot(token,
 		core.WithHTTPClient(httpClient),
-		core.WithGatewayConfig(gateway.Config{
-			GatewayIntents:   discord.GatewayIntentsNonPrivileged | discord.GatewayIntentGuildMembers,
-		}),
-		core.WithCacheConfigOpts(
-			core.WithMemberCachePolicy(core.MemberCachePolicyNone),
-			core.WithMessageCachePolicy(core.MessageCachePolicyNone),
-		),
+		core.WithGatewayConfigOpts(gateway.WithGatewayIntents(discord.GatewayIntentsNonPrivileged)),
+		core.WithCacheConfigOpts(core.WithMemberCachePolicy(core.MemberCachePolicyVoice)),
 		core.WithEventListeners(&core.ListenerAdapter{
 			OnSlashCommand: onSlashCommand,
 			OnButtonClick:  onButtonClick,
@@ -62,22 +57,23 @@ func main() {
 	dgolink = disgolink.NewDisgolink(bot)
 	registerNodes()
 
-	if err = bot.Connect(); err != nil {
+	if err = bot.ConnectGateway(); err != nil {
 		log.Fatalf("error while connecting to discord: %s", err)
 	}
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-s
+	saveSounds()
 }
 
 func registerNodes() {
 	dgolink.AddNode(&disgolink.NodeOptions{
-		Name:     "kittybot",
-		Host:     "lavalink.kittybot.de",
-		Port:     "443",
-		Password: "8v675n4645804v6839b37c4n6v53897c5",
-		Secure:   true,
+		Name:     "node1",
+		Host:     lavalinkHost,
+		Port:     lavalinkPort,
+		Password: lavalinkPassword,
+		Secure:   lavalinkSecure,
 	})
 }
 
@@ -92,43 +88,38 @@ var commands = []discord.ApplicationCommandCreate{
 		Type:        discord.ApplicationCommandTypeSlash,
 		Name:        "sounds",
 		Description: "lets you add/remove/list sounds",
-		Options: []discord.SlashCommandOption{
+		Options: []discord.ApplicationCommandOption{
 			{
-				Type:        discord.CommandOptionTypeSubCommand,
+				Type:        discord.ApplicationCommandOptionTypeSubCommand,
 				Name:        "add",
 				Description: "lets you add new sounds",
-				Options: []discord.SlashCommandOption{
+				Options: []discord.ApplicationCommandOption{
 					{
-						Type:        discord.CommandOptionTypeString,
+						Type:        discord.ApplicationCommandOptionTypeString,
 						Name:        "name",
 						Description: "the unique sound name",
 						Required:    true,
 					},
 					{
-						Type:        discord.CommandOptionTypeString,
+						Type:        discord.ApplicationCommandOptionTypeString,
 						Name:        "source",
-						Description: "the source of the sound(url, ytsearch, etc)",
+						Description: "the source of the sound(url, yt, sc, etc)",
 						Required:    true,
 					},
 				},
 			},
 			{
-				Type:        discord.CommandOptionTypeSubCommand,
+				Type:        discord.ApplicationCommandOptionTypeSubCommand,
 				Name:        "remove",
 				Description: "lets you remove existing sounds",
-				Options: []discord.SlashCommandOption{
+				Options: []discord.ApplicationCommandOption{
 					{
-						Type:        discord.CommandOptionTypeString,
+						Type:        discord.ApplicationCommandOptionTypeString,
 						Name:        "name",
 						Description: "the unique sound name",
 						Required:    true,
 					},
 				},
-			},
-			{
-				Type:        discord.CommandOptionTypeSubCommand,
-				Name:        "list",
-				Description: "lets you add new sounds",
 			},
 		},
 		DefaultPermission: true,

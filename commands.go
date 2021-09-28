@@ -2,19 +2,29 @@ package main
 
 import (
 	"github.com/DisgoOrg/disgo/core"
+	"github.com/DisgoOrg/disgo/discord"
 	"github.com/DisgoOrg/disgolink"
+	"math"
 	"regexp"
+	"strconv"
 )
 
 var URLPattern = regexp.MustCompile("^https?://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]?")
 
 func onSoundAddCommand(event *core.SlashCommandEvent) {
+
+	name := event.Options["name"].String()
+
+	if sound := getUserSound(event.User.ID, name); sound != nil {
+		_ = event.Create(core.NewMessageCreateBuilder().SetContentf("you already have a sound with the name: %s", name).SetEphemeral(true).Build())
+		return
+	}
+
 	err := event.DeferCreate(true)
 	if err != nil {
 		event.Bot().Logger.Error("failed to DeferCreate(true) interaction: ", err)
 	}
 
-	name := event.Options["name"].String()
 	source := event.Options["source"].String()
 	query := source
 
@@ -46,10 +56,27 @@ func onSoundAddCommand(event *core.SlashCommandEvent) {
 }
 
 func onSoundRemoveCommand(event *core.SlashCommandEvent) {
-	//soundName := event.Options["name"].String()
-}
+	name := event.Options["name"].String()
+	if _, ok := sounds[event.User.ID]; !ok {
+		_ = event.Create(core.NewMessageCreateBuilder().SetContentf("no sounds found for you").SetEphemeral(true).Build())
+		return
+	}
 
-func onSoundListCommand(event *core.SlashCommandEvent) {
+	var soundI *int
+	for i, sound := range sounds[event.User.ID] {
+		if sound.Name == name {
+			soundI = &i
+			break
+		}
+	}
+
+	if soundI == nil {
+		_ = event.Create(core.NewMessageCreateBuilder().SetContentf("no sound with name: %s found", name).SetEphemeral(true).Build())
+		return
+	}
+	sounds[event.User.ID] = append(sounds[event.User.ID][:*soundI], sounds[event.User.ID][*soundI+1:]...)
+
+	_ = event.Create(core.NewMessageCreateBuilder().SetContentf("removed sound: %s", name).Build())
 
 }
 
@@ -60,22 +87,47 @@ func onSoundBoardCommand(event *core.SlashCommandEvent) {
 		return
 	}
 
-	builder := core.NewMessageCreateBuilder().SetContent("hit a button to play your sounds!").SetEphemeral(true)
+	// 20 sounds per page
+	pages := int(math.Ceil(float64(len(userSounds)) / float64(20)))
+
+	builder := core.NewMessageCreateBuilder().SetContentf("page 1/%d", pages).SetEphemeral(true).SetActionRows(buildActionRows(0, pages, userSounds)...)
+	_ = event.Create(builder.Build())
+}
+
+func buildActionRows(page int, pages int, sounds []Sound) []core.ActionRow {
+	var rows []core.ActionRow
+
 	actionRow := core.NewActionRow()
-	for name, _ := range userSounds {
+	for i := page * 20; i < len(sounds); i++ {
 		if len(actionRow.Components) == 5 {
-			builder.AddActionRows(actionRow)
+			rows = append(rows, actionRow)
 			actionRow = core.NewActionRow()
-			if len(builder.Components) == 4 {
+			if len(rows) == 4 {
 				break
 			}
 		}
-		actionRow = actionRow.AddComponents(core.NewPrimaryButton(name, "play:"+name, nil))
+		actionRow = actionRow.AddComponents(core.NewPrimaryButton(sounds[i].Name, "play:"+sounds[i].Name, nil))
 	}
 	if len(actionRow.Components) > 0 {
-		builder.AddActionRows(actionRow)
+		rows = append(rows, actionRow)
 	}
 
-	builder.AddActionRow(core.NewSecondaryButton("pause", "pause", nil), core.NewDangerButton("stop", "stop", nil))
-	event.Create(builder.Build())
+	actionRow = core.NewActionRow()
+	if pages > 1 {
+		left := core.NewSecondaryButton("left", "page:"+strconv.Itoa(page-1), &discord.Emoji{Name: "⬅"})
+		if page == 0 {
+			left = left.AsDisabled()
+		}
+		right := core.NewSecondaryButton("right", "page:"+strconv.Itoa(page+1), &discord.Emoji{Name: "➡"})
+		if page == pages-1 {
+			right = right.AsDisabled()
+		}
+		actionRow = actionRow.AddComponents(
+			left,
+			right,
+		)
+	}
+
+	rows = append(rows, actionRow.AddComponents(core.NewSecondaryButton("refresh", "page:"+strconv.Itoa(page), nil), core.NewSecondaryButton("pause", "pause", nil), core.NewDangerButton("stop", "stop", nil)))
+	return rows
 }

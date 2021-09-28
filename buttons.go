@@ -2,16 +2,14 @@ package main
 
 import (
 	"github.com/DisgoOrg/disgo/core"
-	"github.com/DisgoOrg/disgolink"
+	"math"
+	"strconv"
 )
 
 func onPlayButton(event *core.ButtonClickEvent, soundName string) {
-	userSounds, ok := sounds[event.User.ID]
-	if !ok {
+	sound := getUserSound(event.User.ID, soundName)
+	if sound == nil {
 		return
-	}
-	sound, ok := userSounds[soundName]
-	if !ok {
 	}
 
 	memberVoiceState := event.Member.VoiceState()
@@ -23,7 +21,7 @@ func onPlayButton(event *core.ButtonClickEvent, soundName string) {
 	if voiceState == nil || voiceState.ChannelID == nil || *voiceState.ChannelID != *memberVoiceState.ChannelID {
 		_ = memberVoiceState.Channel().Connect()
 	}
-	_ = dgolink.Player(*event.GuildID).Play(&disgolink.DefaultTrack{Base64Track: &sound})
+	_ = dgolink.Player(*event.GuildID).Play(sound.ToTrack())
 
 	actionRows := event.Message.ActionRows()
 
@@ -52,4 +50,19 @@ func onPauseButton(event *core.ButtonClickEvent) {
 	}
 
 	_ = event.UpdateButton(event.Button().WithLabel(label))
+}
+
+func onPageButton(event *core.ButtonClickEvent, pageStr string) {
+	page, _ := strconv.Atoi(pageStr)
+	userSounds, ok := sounds[event.User.ID]
+	if !ok || len(userSounds) == 0 {
+		_ = event.Create(core.NewMessageCreateBuilder().SetContent("you have no sounds added to your soundboard").SetEphemeral(true).Build())
+		return
+	}
+
+	// 20 sounds per page
+	pages := int(math.Ceil(float64(len(userSounds)) / float64(20)))
+
+	builder := core.NewMessageUpdateBuilder().SetContentf("page %d/%d", page + 1, pages).SetActionRows(buildActionRows(page, pages, userSounds)...)
+	_ = event.Update(builder.Build())
 }
